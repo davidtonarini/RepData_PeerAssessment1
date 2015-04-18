@@ -16,7 +16,8 @@ and include the number of steps taken in 5 minute intervals each day.
 
 * Dataset: [Activity monitoring data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip) [52K] 
 Downloads and loads the dataset: 
-```{r}
+
+```r
 download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip","activity.zip",method="curl")
 unzip("activity.zip")
 data <-read.csv("activity.csv")
@@ -25,26 +26,24 @@ data <-read.csv("activity.csv")
 ## What is mean total number of steps taken per day?
 
 For this part, we're going ignore the missing values.
-```{r echo=FALSE}
-step_data <- na.omit(data)
-```
+
 Let's calculate and report the mean and median total number of steps taken per day.
-```{r}
+
+```r
 steps.by.day <- by(step_data$steps,step_data$date,sum)
 mean <- round(mean(steps.by.day,na.rm=TRUE),2)
 median <- round(median(steps.by.day,na.rm=TRUE),2)
 ```
 
-The mean is `r mean` while the median is `r median`. Below we can see a histogram of the total number of steps taken each day
-```{r echo=FALSE}
-hist(steps.by.day, main="Histogram of the total number of steps taken each day")
-```
+The mean is 1.076619 &times; 10<sup>4</sup> while the median is 1.0765 &times; 10<sup>4</sup>. Below we can see a histogram of the total number of steps taken each day
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png) 
 
 ## What is the average daily activity pattern?
 
 The number of steps taken in any interval varies througout the day. We are going to measure the average number of steps taken, averaged across all days.
 
-```{r}
+
+```r
 mean.by.interval <- data.frame("Interval"=integer(),"Average"=numeric())
 
 for (i in (unique(step_data$interval))) {
@@ -57,27 +56,24 @@ max.interval <- mean.by.interval[mean.by.interval$Average == max(mean.by.interva
 max.index <- which.max(mean.by.interval[,2])
 ```
 
-On average across all the days in the dataset, the 5-minute interval that has the highest number of steps is the `r max.index`^th interval, which begins at minute `r max.interval` 
+On average across all the days in the dataset, the 5-minute interval that has the highest number of steps is the 104^th interval, which begins at minute 835 
 
 Below we plot the 5-minute intervals (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
-```{r echo=FALSE}
-plot(mean.by.interval)
-```
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-1.png) 
 
 ## Imputing missing values
 
 In the original data set there are a number of days/intervals where there are missing values (coded as NA). The presence of missing days may introduce bias into some calculations or summaries of the data.
 
-```{r echo=FALSE}
-na_count <- sum(is.na(data$steps))
-```
-The total number of missing values in the dataset is `r na_count`
+
+The total number of missing values in the dataset is 2304
 
 In this part we are going to evaluate the impact of imputing missing data on the estimates of the total daily number of steps.
 
 We are therefore going to fill in all the missing values in the dataset, using the mean value for that day to substitute the missing values . 
-```{r}
+
+```r
 new_data <- data
 for (i in (1:nrow(new_data))) {
   if (is.na(new_data[i,1])) {
@@ -98,24 +94,19 @@ median_diff <- new_median - median
 
 The difference in the mean and the median between this new dataset and the initial one where we simply removed the missing value is: 
 
-* **Mean**: `r mean_diff`
+* **Mean**: -1411.96
 
-* **Median**: `r median_diff`
+* **Median**: -370
 
 Let's also show a histogram to compare the new data with the previous one
-```{r echo=FALSE}
-hist( steps.by.day, col="red" , main="Histogram after imputing missing values")  # first histogram
-hist( new_steps.by.day, col=rgb(0,0,1,1/2) , add=T)  # second
-
-legend("topright", c("First dataset","After imputing"), fill=c("red",rgb(0,0,1,1/2)))
-
-```
+![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9-1.png) 
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
 Create a new factor variable in the dataset with two levels -- "weekday"=1 and "weekend"=0 indicating whether a given date is a weekday or weekend day. Create two new data frames to compare by splitting the original one by this factor 
 
-```{r}
+
+```r
 step_weekdays <- step_data
 step_weekdays$weekday <- with(step_data,as.factor(as.POSIXlt(step_data$date)$wday >= 1 & as.POSIXlt(step_data$date)$wday <= 5))
 #add appropriate label to factors
@@ -124,28 +115,8 @@ levels(step_weekdays$weekday) = c("weekend","weekday")
 #split in two different datasets to plot 
 weekdays = step_weekdays[step_weekdays$weekday=="weekday",]
 weekends = step_weekdays[step_weekdays$weekday=="weekend",]
-
 ```
 
 Finally, let's compare the plot of the two different datasets, split by the weekday factor
 
-```{r echo=FALSE}
-#prepare plotting system
-par(mfrow=c(2,1))
-par(mar=c(1,1,1,1))
-
-plot(weekdays$interval, weekdays$steps,
-       xlab = "Interval",
-       ylab = "Number of steps", type="l", col="red")
-
-
-plot(weekends$interval, weekends$steps,
-    xlab = "Interval",
-     ylab = "Number of steps", type="l",col="blue")
-
-
-legend("topright", 
-       c("Weekdays","Weekends"), 
-       col=c("red","blue"),
-       lwd=2)
-```
+![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11-1.png) 

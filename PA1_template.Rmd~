@@ -23,29 +23,27 @@ data <-read.csv("activity.csv")
 ```
 
 ## What is mean total number of steps taken per day?
-
-For this part, we're going ignore the missing values.
+For this part, we're going ignore the missing values
 ```{r echo=FALSE}
 step_data <- na.omit(data)
 ```
-Let's calculate and report the mean and median total number of steps taken per day.
+
+Calculate and report the mean and median total number of steps taken per day, and make a histogram of the total number of steps taken each day
 ```{r}
 steps.by.day <- by(step_data$steps,step_data$date,sum)
 mean <- round(mean(steps.by.day,na.rm=TRUE),2)
 median <- round(median(steps.by.day,na.rm=TRUE),2)
-```
-
-The mean is `r mean` while the median is `r median`. Below we can see a histogram of the total number of steps taken each day
-```{r echo=FALSE}
 hist(steps.by.day, main="Histogram of the total number of steps taken each day")
 ```
+
+The mean is `r mean` while the median is `r median`
 
 ## What is the average daily activity pattern?
 
 The number of steps taken in any interval varies througout the day. We are going to measure the average number of steps taken, averaged across all days.
 
 ```{r}
-mean.by.interval <- data.frame("Interval"=integer(),"Average"=numeric())
+mean.by.interval <- data.frame(Interval=integer,Average=numeric)
 
 for (i in (unique(step_data$interval))) {
   mean.by.interval <- rbind(mean.by.interval, data.frame(
@@ -56,10 +54,11 @@ for (i in (unique(step_data$interval))) {
 max.interval <- mean.by.interval[mean.by.interval$Average == max(mean.by.interval$Average),"Interval"]
 max.index <- which.max(mean.by.interval[,2])
 ```
-
 On average across all the days in the dataset, the 5-minute interval that has the highest number of steps is the `r max.index`^th interval, which begins at minute `r max.interval` 
 
-Below we plot the 5-minute intervals (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+
+
+
 
 ```{r echo=FALSE}
 plot(mean.by.interval)
@@ -87,65 +86,23 @@ for (i in (1:nrow(new_data))) {
   }
 }
 
-new_steps.by.day <- by(new_data$steps,new_data$date,sum)
-new_mean <- round(mean(new_steps.by.day,na.rm=TRUE),2)
-new_median <- round(median(new_steps.by.day,na.rm=TRUE),2)
-
+steps.by.day <- by(new_data$steps,new_data$date,sum)
+new_mean <- round(mean(steps.by.day,na.rm=TRUE),2)
+new_median <- round(median(steps.by.day,na.rm=TRUE),2)
+hist(steps.by.day, main="Histogram of the total number of steps taken each day")
 
 mean_diff <- new_mean - mean
 median_diff <- new_median - median
 ```
 
 The difference in the mean and the median between this new dataset and the initial one where we simply removed the missing value is: 
-
 * **Mean**: `r mean_diff`
-
 * **Median**: `r median_diff`
 
 Let's also show a histogram to compare the new data with the previous one
 ```{r echo=FALSE}
-hist( steps.by.day, col="red" , main="Histogram after imputing missing values")  # first histogram
-hist( new_steps.by.day, col=rgb(0,0,1,1/2) , add=T)  # second
-
-legend("topright", c("First dataset","After imputing"), fill=c("red",rgb(0,0,1,1/2)))
-
+hist(steps.by.day, main="Histogram after imputing missing values")
 ```
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
-Create a new factor variable in the dataset with two levels -- "weekday"=1 and "weekend"=0 indicating whether a given date is a weekday or weekend day. Create two new data frames to compare by splitting the original one by this factor 
-
-```{r}
-step_weekdays <- step_data
-step_weekdays$weekday <- with(step_data,as.factor(as.POSIXlt(step_data$date)$wday >= 1 & as.POSIXlt(step_data$date)$wday <= 5))
-#add appropriate label to factors
-levels(step_weekdays$weekday) = c("weekend","weekday")
-
-#split in two different datasets to plot 
-weekdays = step_weekdays[step_weekdays$weekday=="weekday",]
-weekends = step_weekdays[step_weekdays$weekday=="weekend",]
-
-```
-
-Finally, let's compare the plot of the two different datasets, split by the weekday factor
-
-```{r echo=FALSE}
-#prepare plotting system
-par(mfrow=c(2,1))
-par(mar=c(1,1,1,1))
-
-plot(weekdays$interval, weekdays$steps,
-       xlab = "Interval",
-       ylab = "Number of steps", type="l", col="red")
-
-
-plot(weekends$interval, weekends$steps,
-    xlab = "Interval",
-     ylab = "Number of steps", type="l",col="blue")
-
-
-legend("topright", 
-       c("Weekdays","Weekends"), 
-       col=c("red","blue"),
-       lwd=2)
-```
